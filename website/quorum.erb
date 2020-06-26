@@ -1,0 +1,56 @@
+<% wrap_layout :inner do %>
+  <% content_for :sidebar do %>
+    <div class="docs-sidebar hidden-print affix-top" role="complementary">
+      <ul class="nav docs-sidenav">
+        <li<%#= sidebar_current("docs-home") %>>
+          <a href="/docs/providers/index.html">All Providers</a>
+        </li>
+
+        <li<%= sidebar_current("docs-quorum-index") %>>
+          <a href="/docs/providers/quorum/index.html">Quorum Provider</a>
+        </li>
+
+        <li<%= sidebar_current("docs-quorum-datasource") %>>
+          <a href="#">Data Sources</a>
+          <ul class="nav nav-visible">
+            <li<%= sidebar_current("docs-quorum-bootstrap-genesis-mixhash") %>>
+              <a href="/docs/providers/quorum/d/bootstrap_genesis_mixhash.html">quorum_bootstrap_genesis_mixhash</a>
+            </li>
+            <li<%= sidebar_current("docs-quorum-bootstrap-node-key") %>>
+              <a href="/docs/providers/quorum/d/bootstrap_node_key.html">quorum_bootstrap_node_key</a>
+            </li>
+          </ul>
+        </li>
+
+        <li<%= sidebar_current("docs-quorum-resource") %>>
+          <a href="#">Resources</a>
+          <ul class="nav nav-visible">
+            <li<%= sidebar_current("docs-quorum-bootstrap-account") %>>
+              <a href="/docs/providers/quorum/r/bootstrap_account.html">quorum_bootstrap_account</a>
+            </li>
+            <li<%= sidebar_current("docs-quorum-bootstrap-data-dir") %>>
+              <a href="/docs/providers/quorum/r/bootstrap_data_dir.html">quorum_bootstrap_data_dir</a>
+            </li>
+            <li<%= sidebar_current("docs-quorum-bootstrap-istanbul-extradata") %>>
+              <a href="/docs/providers/quorum/r/bootstrap_istanbul_extradata.html">quorum_bootstrap_istanbul_extradata</a>
+            </li>
+            <li<%= sidebar_current("docs-quorum-bootstrap-keystore") %>>
+              <a href="/docs/providers/quorum/r/bootstrap_keystore.html">quorum_bootstrap_keystore</a>
+            </li>
+            <li<%= sidebar_current("docs-quorum-bootstrap-network") %>>
+              <a href="/docs/providers/quorum/r/bootstrap_network.html">quorum_bootstrap_network</a>
+            </li>
+            <li<%= sidebar_current("docs-quorum-bootstrap-node-key") %>>
+              <a href="/docs/providers/quorum/r/bootstrap_node_key.html">quorum_bootstrap_node_key</a>
+            </li>
+            <li<%= sidebar_current("docs-quorum-transaction-manager-keypair") %>>
+              <a href="/docs/providers/quorum/r/transaction_manager_keypair.html">quorum_transaction_manager_keypair</a>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= yield %>
+<% end %>

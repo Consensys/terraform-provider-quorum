@@ -1,0 +1,32 @@
+---
+layout: "quorum"
+page_title: "Quorum: {{.Title}}"
+sidebar_current: "{{- .SideBar}}"
+description: |-
+   {{.ShortDescription}}
+---
+
+# {{.Name}}
+
+{{.LongDescription}}
+
+## Example Usage
+
+{{.Example}}
+
+## Argument Reference
+{{range $idx, $argument := .Inputs }}
+- `{{- $argument.Name}}` - ({{$argument.Flag}}) {{$argument.Description}}
+{{- if $argument.Object }}
+
+    {{$argument.Object.Description}}
+{{- range $f := $argument.Object.Fields }}
+    - `{{- $f.Name}}` - {{- $f.Flag}} {{$f.Description}}
+{{- end }}
+{{ end }}
+{{- end }}
+
+## Attributes Reference
+{{range $idx, $argument := .Outputs }}
+- `{{- $argument.Name}}` - {{$argument.Description}}
+{{- end }}

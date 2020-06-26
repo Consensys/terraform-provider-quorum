@@ -1,0 +1,8 @@
+.idea
+*/.DS_Store
+*.iml
+**/.terraform*
+**/terraform.tf*
+**/target
+build
+**/terraform.d

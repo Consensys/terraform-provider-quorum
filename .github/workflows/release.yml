@@ -1,0 +1,96 @@
+on:
+  push:
+    tags:
+      - 'v*'
+
+name: Release
+
+jobs:
+  prepare:
+    name: Prepare
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract tag name
+        id: tag
+        run: |
+          echo "::set-output name=value::${GITHUB_REF##*/}"
+      - name: Checkout code
+        uses: actions/checkout@v1
+      - name: Extract release notes
+        id: release_notes
+        run: |
+          text=$(awk '/^## ${{ steps.tag.outputs.value }}$/{flag=1;next}/^##/{flag=0}flag' CHANGELOG.md)
+          if [[ "$text" == "" ]]; then
+            echo "::error file=CHANGELOG.md::There is no release notes for ${{ steps.tag.outputs.value }}"
+            exit 1
+          fi
+          text="${text//'%'/'%25'}"
+          text="${text//$'\n'/'%0A'}"
+          text="${text//$'\r'/'%0D'}"
+          echo "::set-output name=value::$text"
+      - name: Create ${{ steps.tag.outputs.value }} release
+        id: create_release
+        uses: actions/create-release@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ steps.tag.outputs.value }}
+          body: |
+            ${{ steps.release_notes.outputs.value }}
+          draft: true
+          prerelease: false
+      - name: Write upload_url
+        run: |
+          echo '${{ steps.create_release.outputs.upload_url }}' > upload_url.txt
+      - name: Persist upload_url
+        uses: actions/upload-artifact@v1
+        with:
+          name: release_asset_upload_url
+          path: upload_url.txt
+  build:
+    name: Build and upload
+    needs: prepare
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - name: Set up Go 1.13
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13
+      - name: Retrieve persisted upload_url
+        uses: actions/download-artifact@v1
+        with:
+          name: release_asset_upload_url
+      - name: Prepare metadata
+        id: meta
+        run: |
+          echo "::set-output name=upload_url::$(cat release_asset_upload_url/upload_url.txt)"
+          echo "::set-output name=version::${GITHUB_REF##*/}"
+          echo "::set-output name=os::$(go env GOOS)"
+          echo "::set-output name=arch::$(go env GOARCH)"
+          echo "::set-output name=dist::terraform-provider-quorum_${{ steps.meta.outputs.version }}_${{ steps.meta.outputs.os }}_${{ steps.meta.outputs.arch }}.tar.gz"
+      - name: Checkout code
+        uses: actions/checkout@v1
+      - name: Build ${{ steps.meta.outputs.os }}_${{ steps.meta.outputs.arch }} binary
+        id: package
+        run: |
+          if [[ "${{ steps.meta.outputs.os }}" == "linux" ]]; then
+            make distlinux
+          else
+            make distlocal
+          fi
+          cd build/${{ steps.meta.outputs.os }}_${{ steps.meta.outputs.arch }}
+          tar cfvz ${{ steps.meta.outputs.dist }} *
+      - name: Upload binary
+        id: upload_binaries
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        with:
+          upload_url: ${{ steps.meta.outputs.upload_url }}
+          asset_path: ./build/${{ steps.meta.outputs.os }}_${{ steps.meta.outputs.arch }}/${{ steps.meta.outputs.dist }}
+          asset_name: ${{ steps.meta.outputs.dist }}
+          asset_content_type: application/gzip
