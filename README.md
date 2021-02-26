@@ -11,8 +11,8 @@ This plugin provides number of data sources and resources which can be used to b
 
 ## Requirements
 
-* Terraform 0.12.x
-* Go 1.13.x (to build the provider plugin)
+* Terraform 0.13.x
+* Go 1.15.x (to build the provider plugin)
 
 ## Using the provider
 

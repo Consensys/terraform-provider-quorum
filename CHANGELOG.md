@@ -1,4 +1,4 @@
-## 0.1.0 (Unreleased)
+## v1.0.0-beta.1
 
 This is an initial release
 
