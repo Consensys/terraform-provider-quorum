@@ -6,16 +6,59 @@ on:
 name: Release
 
 jobs:
-  prepare:
-    name: Prepare
+  build:
+    name: Build artifacts
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - name: Set up Go 1.15
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.15
+      - name: Prepare metadata
+        id: meta
+        run: |
+          os=$(go env GOOS)
+          arch=$(go env GOARCH)
+          version=${GITHUB_REF##*/}
+          echo "::set-output name=version::$version"
+          echo "::set-output name=os::$os"
+          echo "::set-output name=arch::$arch"
+          echo "::set-output name=dist::terraform-provider-quorum_${version:1}_${os}_${arch}.zip"
+          echo "::set-output name=name::terraform-provider-quorum_${version:1}_${os}_${arch}"
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Build ${{ steps.meta.outputs.os }}_${{ steps.meta.outputs.arch }} binary
+        id: package
+        run: |
+          export VERSION=${{ steps.meta.outputs.version }}
+          if [[ "${{ steps.meta.outputs.os }}" == "linux" ]]; then
+            make distlinux
+          else
+            make distlocal
+          fi
+          cd build/${{ steps.meta.outputs.os }}_${{ steps.meta.outputs.arch }}
+          zip ${{ runner.temp }}/${{ steps.meta.outputs.dist }} *
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ steps.meta.outputs.name }}
+          path: ${{ runner.temp }}/${{ steps.meta.outputs.dist }}
+  release:
+    name: Release
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Extract tag name
         id: tag
         run: |
-          echo "::set-output name=value::${GITHUB_REF##*/}"
+          full_version=${GITHUB_REF##*/}
+          echo "::set-output name=value::${full_version}"
+          echo "::set-output name=short::${full_version:1}"
       - name: Checkout code
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
       - name: Extract release notes
         id: release_notes
         run: |
@@ -30,7 +73,7 @@ jobs:
           echo "::set-output name=value::$text"
       - name: Create ${{ steps.tag.outputs.value }} release
         id: create_release
-        uses: actions/create-release@master
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
         with:
@@ -40,57 +83,31 @@ jobs:
             ${{ steps.release_notes.outputs.value }}
           draft: true
           prerelease: false
-      - name: Write upload_url
-        run: |
-          echo '${{ steps.create_release.outputs.upload_url }}' > upload_url.txt
-      - name: Persist upload_url
-        uses: actions/upload-artifact@v1
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
         with:
-          name: release_asset_upload_url
-          path: upload_url.txt
-  build:
-    name: Build and upload
-    needs: prepare
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    steps:
-      - name: Set up Go 1.13
-        uses: actions/setup-go@v1
-        with:
-          go-version: 1.13
-      - name: Retrieve persisted upload_url
-        uses: actions/download-artifact@v1
-        with:
-          name: release_asset_upload_url
-      - name: Prepare metadata
-        id: meta
-        run: |
-          echo "::set-output name=upload_url::$(cat release_asset_upload_url/upload_url.txt)"
-          echo "::set-output name=version::${GITHUB_REF##*/}"
-          echo "::set-output name=os::$(go env GOOS)"
-          echo "::set-output name=arch::$(go env GOARCH)"
-          echo "::set-output name=dist::terraform-provider-quorum_${{ steps.meta.outputs.version }}_${{ steps.meta.outputs.os }}_${{ steps.meta.outputs.arch }}.tar.gz"
-      - name: Checkout code
-        uses: actions/checkout@v1
-      - name: Build ${{ steps.meta.outputs.os }}_${{ steps.meta.outputs.arch }} binary
-        id: package
-        run: |
-          if [[ "${{ steps.meta.outputs.os }}" == "linux" ]]; then
-            make distlinux
-          else
-            make distlocal
-          fi
-          cd build/${{ steps.meta.outputs.os }}_${{ steps.meta.outputs.arch }}
-          tar cfvz ${{ steps.meta.outputs.dist }} *
-      - name: Upload binary
-        id: upload_binaries
-        uses: actions/upload-release-asset@v1.0.1
+          path: ${{ runner.temp }}/artifacts
+      - name: Import GPG key
+        uses: paultyng/ghaction-import-gpg@v2.1.0
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      - name: Generate checksums and sign
+        id: gen
+        working-directory: ${{ runner.temp }}/artifacts
+        run: |
+          output_dir="${{ runner.temp }}/artifacts/upload"
+          mkdir -p ${output_dir}
+          mv */terraform-provider-quorum*.zip ${output_dir}
+          cd ${output_dir}
+          f="terraform-provider-quorum_${{ steps.tag.outputs.short }}_SHA256SUMS"
+          shasum -a 256 *.zip > ${f}
+          gpg --detach-sign ${f}
+          ls -lha
+          echo "::set-output name=outdir::${output_dir}"
+      - name: Upload release assets
+        uses: csexton/release-asset-action@v2
         with:
-          upload_url: ${{ steps.meta.outputs.upload_url }}
-          asset_path: ./build/${{ steps.meta.outputs.os }}_${{ steps.meta.outputs.arch }}/${{ steps.meta.outputs.dist }}
-          asset_name: ${{ steps.meta.outputs.dist }}
-          asset_content_type: application/gzip
+          pattern: "${{ steps.gen.outputs.outdir }}/*"
+          github-token: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+          release-url: ${{ steps.create_release.outputs.upload_url }}

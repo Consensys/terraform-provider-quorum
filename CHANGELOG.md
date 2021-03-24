@@ -17,4 +17,7 @@ This is an initial release
 - `quorum_bootstrap_genesis_mixhash`: Provide `mixHash` value constants being used in genesis JSON
 - `quorum_bootstrap_node_key`: Read node key hex value
 
+**CI/CD**
+- Configure for official [TF registry](https://registry.terraform.io/browse/providers) releases
+
 ## START
