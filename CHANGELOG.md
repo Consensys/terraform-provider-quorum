@@ -1,3 +1,14 @@
+## v0.2.0 (Unreleased)
+
+*TBD*
+
+
+
+**Updated Resources**
+- `quorum_bootstrap_istanbul_extradata`: Added a new argument `besu_mode` that creates the `extraData` for genesis JSON used for IBFT2 consensus on Hyperledger Besu. 
+
+
+
 ## v0.1.0
 
 *Released on March 24th 2021*
