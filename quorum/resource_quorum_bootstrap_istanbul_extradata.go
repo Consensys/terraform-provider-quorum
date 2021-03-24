@@ -30,6 +30,13 @@ func resourceBootstrapIstanbulExtradata() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 			},
+			"besu_mode": {
+				Type:        schema.TypeBool,
+				Description: "generate extradata using RLP encoding mode used by Hyperledger Besu for IBFT2",
+				Optional:    true,
+				ForceNew:    true,
+				Default:     false,
+			},
 			"vanity": {
 				Type:        schema.TypeString,
 				Description: "Vanity Hex Value to be included in the extradata",
@@ -56,7 +63,25 @@ func resourceBootstrapIstanbulExtradataCreate(d *schema.ResourceData, _ interfac
 			validators[idx] = common.HexToAddress(addr)
 		}
 	}
+	vanity := d.Get("vanity").(string)
+	besuMode := d.Get("besu_mode").(bool)
 
+	createFunc := createForGoQuorum
+	if besuMode {
+		createFunc = createForBesu
+	}
+
+	payload, err := createFunc(validators, vanity)
+	if err != nil {
+		return err
+	}
+	extradata := "0x" + common.Bytes2Hex(payload)
+	d.Set("extradata", extradata)
+	d.SetId(fmt.Sprintf("%d", time.Now().Unix()))
+	return nil
+}
+
+func createForGoQuorum(validators []common.Address, vanity string) ([]byte, error) {
 	ist := &types.IstanbulExtra{
 		Validators:    validators,
 		Seal:          make([]byte, types.IstanbulExtraSeal),
@@ -64,22 +89,28 @@ func resourceBootstrapIstanbulExtradataCreate(d *schema.ResourceData, _ interfac
 	}
 	payload, err := rlp.EncodeToBytes(&ist)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	vanity := d.Get("vanity").(string)
 	newVanity, err := hexutil.Decode(vanity)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if len(newVanity) < types.IstanbulExtraVanity {
 		newVanity = append(newVanity, bytes.Repeat([]byte{0x00}, types.IstanbulExtraVanity-len(newVanity))...)
 	}
 	newVanity = newVanity[:types.IstanbulExtraVanity]
-	extradata := "0x" + common.Bytes2Hex(append(newVanity, payload...))
-	d.Set("extradata", extradata)
-	d.SetId(fmt.Sprintf("%d", time.Now().Unix()))
-	return nil
+	return append(newVanity, payload...), nil
+}
+
+func createForBesu(validators []common.Address, _ string) ([]byte, error) {
+	data := &BesuExtraData{
+		Vanity:      make([]byte, 32),
+		Validators:  validators,
+		RoundNumber: make([]byte, 4),
+	}
+
+	return rlp.EncodeToBytes(data)
 }
 
 func resourceBootstrapIstanbulExtradataRead(d *schema.ResourceData, _ interface{}) error {
