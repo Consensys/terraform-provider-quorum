@@ -5,7 +5,7 @@
 
 
 **Updated Resources**
-- `quorum_bootstrap_istanbul_extradata`: Added a new argument `besu_mode` that creates the `extraData` for genesis JSON used for IBFT2 consensus on Hyperledger Besu. 
+- `quorum_bootstrap_istanbul_extradata`: Added a new argument `ibft2_mode` that creates the `extraData` for genesis JSON used for IBFT2 consensus on Hyperledger Besu. 
 
 
 

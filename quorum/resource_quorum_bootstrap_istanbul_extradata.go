@@ -30,7 +30,7 @@ func resourceBootstrapIstanbulExtradata() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 			},
-			"besu_mode": {
+			"ibft2_mode": {
 				Type:        schema.TypeBool,
 				Description: "generate extradata using RLP encoding mode used by Hyperledger Besu for IBFT2",
 				Optional:    true,
@@ -64,7 +64,7 @@ func resourceBootstrapIstanbulExtradataCreate(d *schema.ResourceData, _ interfac
 		}
 	}
 	vanity := d.Get("vanity").(string)
-	besuMode := d.Get("besu_mode").(bool)
+	besuMode := d.Get("ibft2_mode").(bool)
 
 	createFunc := createForGoQuorum
 	if besuMode {
