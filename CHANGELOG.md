@@ -1,4 +1,6 @@
-## 0.1.0 (Unreleased)
+## v0.1.0
+
+*Released on March 24th 2021*
 
 This is an initial release
 
@@ -14,5 +16,8 @@ This is an initial release
 **New Data Sources**
 - `quorum_bootstrap_genesis_mixhash`: Provide `mixHash` value constants being used in genesis JSON
 - `quorum_bootstrap_node_key`: Read node key hex value
+
+**CI/CD**
+- Configure for official [TF registry](https://registry.terraform.io/browse/providers) releases
 
 ## START
