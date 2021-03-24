@@ -1,4 +1,4 @@
-## 0.1.0 (Unreleased)
+## 0.1.0 (March 24th 2021)
 
 This is an initial release
 
