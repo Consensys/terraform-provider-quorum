@@ -1,17 +1,17 @@
-TEST?=$$(go list ./... |grep -v 'vendor')
-GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
+TEST ?= $$(go list ./... |grep -v 'vendor')
+GOFMT_FILES ?= $$(find . -name '*.go' |grep -v vendor)
 WEBSITE_REPO=github.com/hashicorp/terraform-website
 PKG_NAME=quorum
 OUTPUT_DIR=$(shell readlink build)
 CURRENT_OS=$(shell go env GOOS)
 CURRENT_ARCH=$(shell go env GOARCH)
-VERSION=$(shell cat VERSION)
+VERSION ?= v0.0.0
 TARGET_OS=linux
 ifeq (darwin,$(CURRENT_OS))
 	TARGET_OS+=local
 endif
 PLATFORMS=$(addprefix dist, $(TARGET_OS))
-GOLANG_DOCKER_IMAGE=golang:1.13-alpine
+GOLANG_DOCKER_IMAGE=golang:1.15-alpine
 LDFLAGS=-s -w $(ldflags)
 
 default: build
@@ -40,11 +40,11 @@ dist: fmtcheck $(PLATFORMS)
 
 distlinux:
 	@echo "==> Building for Linux using Docker with $(GOLANG_DOCKER_IMAGE)"
-	@docker run --rm -t -v $(shell pwd):/terraform-provider-quorum -v $(OUTPUT_DIR):$(OUTPUT_DIR) $(GOLANG_DOCKER_IMAGE) /terraform-provider-quorum/scripts/linux_build.sh
+	@docker run --rm -t -v $(shell pwd):/terraform-provider-quorum -v $(OUTPUT_DIR):$(OUTPUT_DIR) -e VERSION=$(VERSION) $(GOLANG_DOCKER_IMAGE) /terraform-provider-quorum/scripts/linux_build.sh
 
 distlocal:
 	@echo '==> Building for $(CURRENT_OS)_$(CURRENT_ARCH) with -ldflags: $(LDFLAGS)'
-	@GOFLAGS="-mod=vendor" go build -o build/$(CURRENT_OS)_$(CURRENT_ARCH)/terraform-provider-quorum_v$(VERSION) -ldflags '$(LDFLAGS)'
+	@go build -o build/$(CURRENT_OS)_$(CURRENT_ARCH)/terraform-provider-quorum_$(VERSION) -ldflags '$(LDFLAGS)'
 
 vendor:
 	@go mod vendor

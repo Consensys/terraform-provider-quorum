@@ -1,10 +1,10 @@
 variable "network_name" {
-  type        = "string"
+  type        = string
   description = "Name of the network"
 }
 
 variable "nodes_config" {
-  type        = "list"
+  type        = list
   description = "A complex structure configures nodes in a network"
 }
 

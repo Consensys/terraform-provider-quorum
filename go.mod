@@ -34,4 +34,4 @@ require (
 	gopkg.in/urfave/cli.v1 v1.20.0 // indirect
 )
 
-go 1.13
+go 1.15
