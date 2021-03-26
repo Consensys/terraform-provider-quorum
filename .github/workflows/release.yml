@@ -88,10 +88,10 @@ jobs:
         with:
           path: ${{ runner.temp }}/artifacts
       - name: Import GPG key
-        uses: paultyng/ghaction-import-gpg@v2.1.0
-        env:
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-          PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        uses: crazy-max/ghaction-import-gpg@v3
+        with:
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
       - name: Generate checksums and sign
         id: gen
         working-directory: ${{ runner.temp }}/artifacts
