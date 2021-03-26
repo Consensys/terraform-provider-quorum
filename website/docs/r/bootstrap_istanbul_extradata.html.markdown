@@ -28,6 +28,7 @@ resource "quorum_bootstrap_istanbul_extradata" "test" {
 
 ## Argument Reference
 
+- `ibft2_mode` - (Optional) generate extradata using RLP encoding mode used by Hyperledger Besu for IBFT2
 - `istanbul_addresses` - (Required) list of Istanbul address to construct extradata
 - `vanity` - (Optional) Vanity Hex Value to be included in the extradata
 
