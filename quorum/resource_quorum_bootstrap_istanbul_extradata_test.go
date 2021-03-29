@@ -75,7 +75,7 @@ func TestAccResourceBootstrapIstanbulExtradata_Besu(t *testing.T) {
 							"0x95167bde9c4c3b12180945bbee9900f69d9ea558",
 							"0xa7c1d1b572f11b02cd6fadc21f1e51f399b4d4cb"
 						]
-						ibft2_mode = true
+						mode = "ibft2"
 					}
                `,
 				Check: resource.ComposeAggregateTestCheckFunc(

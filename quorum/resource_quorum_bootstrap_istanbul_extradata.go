@@ -30,12 +30,12 @@ func resourceBootstrapIstanbulExtradata() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 			},
-			"ibft2_mode": {
-				Type:        schema.TypeBool,
-				Description: "generate extradata using RLP encoding mode used by Hyperledger Besu for IBFT2",
+			"mode": {
+				Type:        schema.TypeString,
+				Description: "generate extradata using RLP encoding mode. Supported: ibft1 and ibft2. Default is ibft1",
 				Optional:    true,
 				ForceNew:    true,
-				Default:     false,
+				Default:     Ibft1,
 			},
 			"vanity": {
 				Type:        schema.TypeString,
@@ -64,11 +64,13 @@ func resourceBootstrapIstanbulExtradataCreate(d *schema.ResourceData, _ interfac
 		}
 	}
 	vanity := d.Get("vanity").(string)
-	besuMode := d.Get("ibft2_mode").(bool)
+	mode := d.Get("mode").(string)
 
-	createFunc := createForGoQuorum
-	if besuMode {
-		createFunc = createForBesu
+	// by default, Ibft1
+	createFunc := createIbft1ExtraData
+	switch mode {
+	case Ibft2:
+		createFunc = createIbft2ExtraData
 	}
 
 	payload, err := createFunc(validators, vanity)
@@ -81,7 +83,7 @@ func resourceBootstrapIstanbulExtradataCreate(d *schema.ResourceData, _ interfac
 	return nil
 }
 
-func createForGoQuorum(validators []common.Address, vanity string) ([]byte, error) {
+func createIbft1ExtraData(validators []common.Address, vanity string) ([]byte, error) {
 	ist := &types.IstanbulExtra{
 		Validators:    validators,
 		Seal:          make([]byte, types.IstanbulExtraSeal),
@@ -103,7 +105,7 @@ func createForGoQuorum(validators []common.Address, vanity string) ([]byte, erro
 	return append(newVanity, payload...), nil
 }
 
-func createForBesu(validators []common.Address, _ string) ([]byte, error) {
+func createIbft2ExtraData(validators []common.Address, _ string) ([]byte, error) {
 	data := &BesuExtraData{
 		Vanity:      make([]byte, 32),
 		Validators:  validators,
