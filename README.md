@@ -44,3 +44,14 @@ $ make
 ## Testing the provider
 
 In order to test the provider, you can run `go test ./quorum -v`
+
+## Generate new documentation website
+
+Go to the `website` folder and do:
+```
+go build gen.go
+./gen
+rm -f gen
+```
+
+This will update automatically the website documentation.

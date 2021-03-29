@@ -20,7 +20,6 @@ func resourceBootstrapIstanbulExtradata() *schema.Resource {
 		Create: resourceBootstrapIstanbulExtradataCreate,
 		Read:   resourceBootstrapIstanbulExtradataRead,
 		Delete: resourceBootstrapIstanbulExtradataDelete,
-
 		Schema: map[string]*schema.Schema{
 			"istanbul_addresses": {
 				Type:        schema.TypeList,
@@ -29,6 +28,13 @@ func resourceBootstrapIstanbulExtradata() *schema.Resource {
 				MinItems:    1,
 				Required:    true,
 				ForceNew:    true,
+			},
+			"mode": {
+				Type:        schema.TypeString,
+				Description: "generate extradata using RLP encoding mode. Supported: ibft1 and ibft2. Default is ibft1",
+				Optional:    true,
+				ForceNew:    true,
+				Default:     Ibft1,
 			},
 			"vanity": {
 				Type:        schema.TypeString,
@@ -56,7 +62,27 @@ func resourceBootstrapIstanbulExtradataCreate(d *schema.ResourceData, _ interfac
 			validators[idx] = common.HexToAddress(addr)
 		}
 	}
+	vanity := d.Get("vanity").(string)
+	mode := d.Get("mode").(string)
 
+	// by default, Ibft1
+	createFunc := createIbft1ExtraData
+	switch mode {
+	case Ibft2:
+		createFunc = createIbft2ExtraData
+	}
+
+	payload, err := createFunc(validators, vanity)
+	if err != nil {
+		return err
+	}
+	extradata := "0x" + common.Bytes2Hex(payload)
+	d.Set("extradata", extradata)
+	d.SetId(fmt.Sprintf("%d", time.Now().Unix()))
+	return nil
+}
+
+func createIbft1ExtraData(validators []common.Address, vanity string) ([]byte, error) {
 	ist := &types.IstanbulExtra{
 		Validators:    validators,
 		Seal:          make([]byte, types.IstanbulExtraSeal),
@@ -64,22 +90,28 @@ func resourceBootstrapIstanbulExtradataCreate(d *schema.ResourceData, _ interfac
 	}
 	payload, err := rlp.EncodeToBytes(&ist)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	vanity := d.Get("vanity").(string)
 	newVanity, err := hexutil.Decode(vanity)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if len(newVanity) < types.IstanbulExtraVanity {
 		newVanity = append(newVanity, bytes.Repeat([]byte{0x00}, types.IstanbulExtraVanity-len(newVanity))...)
 	}
 	newVanity = newVanity[:types.IstanbulExtraVanity]
-	extradata := "0x" + common.Bytes2Hex(append(newVanity, payload...))
-	d.Set("extradata", extradata)
-	d.SetId(fmt.Sprintf("%d", time.Now().Unix()))
-	return nil
+	return append(newVanity, payload...), nil
+}
+
+func createIbft2ExtraData(validators []common.Address, _ string) ([]byte, error) {
+	data := &BesuExtraData{
+		Vanity:      make([]byte, 32),
+		Validators:  validators,
+		RoundNumber: make([]byte, 4),
+	}
+
+	return rlp.EncodeToBytes(data)
 }
 
 func resourceBootstrapIstanbulExtradataRead(d *schema.ResourceData, _ interface{}) error {

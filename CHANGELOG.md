@@ -1,3 +1,8 @@
+## v0.2.0
+
+**Updated Resources**
+- `quorum_bootstrap_istanbul_extradata`: Added a new argument `mode` that creates the `extraData` for genesis JSON based if is IBFT1 or IBFT2 consensus.
+
 ## v0.1.0
 
 *Released on March 24th 2021*
