@@ -20,7 +20,6 @@ func resourceBootstrapIstanbulExtradata() *schema.Resource {
 		Create: resourceBootstrapIstanbulExtradataCreate,
 		Read:   resourceBootstrapIstanbulExtradataRead,
 		Delete: resourceBootstrapIstanbulExtradataDelete,
-		CHANGELOG.md
 		Schema: map[string]*schema.Schema{
 			"istanbul_addresses": {
 				Type:        schema.TypeList,
