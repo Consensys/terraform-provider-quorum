@@ -70,6 +70,8 @@ func resourceBootstrapIstanbulExtradataCreate(d *schema.ResourceData, _ interfac
 	switch mode {
 	case Ibft2:
 		createFunc = createIbft2ExtraData
+	case Qbft:
+		createFunc = createQbftExtraData
 	}
 
 	payload, err := createFunc(validators, vanity)
@@ -111,6 +113,15 @@ func createIbft2ExtraData(validators []common.Address, _ string) ([]byte, error)
 		RoundNumber: make([]byte, 4),
 	}
 
+	return rlp.EncodeToBytes(data)
+}
+
+// createQbftExtraData generates qbft consensus compatible extraData
+func createQbftExtraData(validators []common.Address, _ string) ([]byte, error) {
+	data := &QbftExtraData{
+		Vanity:     make([]byte, 32),
+		Validators: validators,
+	}
 	return rlp.EncodeToBytes(data)
 }
 

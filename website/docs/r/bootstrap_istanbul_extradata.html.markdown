@@ -29,7 +29,7 @@ resource "quorum_bootstrap_istanbul_extradata" "test" {
 ## Argument Reference
 
 - `istanbul_addresses` - (Required) list of Istanbul address to construct extradata
-- `mode` - (Optional) generate extradata using RLP encoding mode. Supported: ibft1 and ibft2. Default is ibft1
+- `mode` - (Optional) generate extradata using RLP encoding mode. Supported: ibft1, ibft2 and qbft. Default is ibft1
 - `vanity` - (Optional) Vanity Hex Value to be included in the extradata
 
 ## Attributes Reference
