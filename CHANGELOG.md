@@ -1,3 +1,8 @@
+## v0.3.0
+
+**Updated Resources**
+- `quorum_bootstrap_istanbul_extradata`: Added support for `qbft` `mode` that creates the `extraData` for genesis JSON based on QBFT consensus.
+
 ## v0.2.0
 
 **Updated Resources**

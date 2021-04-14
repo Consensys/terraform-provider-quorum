@@ -7,6 +7,7 @@ type Mode string
 const (
 	Ibft1 Mode = "ibft1"
 	Ibft2      = "ibft2"
+	Qbft       = "qbft"
 )
 
 type BesuExtraData struct {
@@ -15,4 +16,19 @@ type BesuExtraData struct {
 	Vote        []byte
 	RoundNumber []byte
 	Seals       [][]byte
+}
+
+// QbftExtraData represents Qbft consensus compatible extraData
+type QbftExtraData struct {
+	Vanity      []byte
+	Validators  []common.Address
+	Vote        *ValidatorVote
+	RoundNumber uint32
+	Seals       [][]byte
+}
+
+// ValidatorVote represent a vote to add or remove a validator in Qbft Consensus
+type ValidatorVote struct {
+	RecipientAddress common.Address
+	VoteType         byte
 }
