@@ -23,7 +23,7 @@ type QbftExtraData struct {
 	Vanity      []byte
 	Validators  []common.Address
 	Vote        *ValidatorVote
-	RoundNumber uint32
+	RoundNumber []byte
 	Seals       [][]byte
 }
 
